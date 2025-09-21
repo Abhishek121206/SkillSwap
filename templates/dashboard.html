@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - SkillSwap</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="header">
+        <nav class="nav">
+            <div class="logo">
+                <a href="/dashboard" class="logo-link">
+                    <span class="logo-icon">🎓</span>
+                    <span class="logo-text">SkillSwap</span>
+                </a>
+            </div>
+            <ul class="nav-links">
+                <li><a href="/dashboard"><span class="nav-icon">⌘</span>Dashboard</a></li>
+                <li><a href="/skills"><span class="nav-icon">◉</span>Browse Skills</a></li>
+                <li><a href="/add-skill"><span class="nav-icon">⊕</span>Add Skill</a></li>
+                <li><a href="#" onclick="logout()"><span class="nav-icon">⟲</span>Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="dashboard-header">
+            <h1>Welcome back, <span id="username">User</span>!</h1>
+            <p>Your learning journey continues here</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="userCredits">0</div>
+                <div class="stat-label">Your Credits</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="skillsTaught">0</div>
+                <div class="stat-label">Skills You Teach</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="skillsLearning">0</div>
+                <div class="stat-label">Skills You're Learning</div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="leaderboard">
+                <div class="leaderboard-header">
+                    <h3>◉ Community Leaderboard</h3>
+                </div>
+                <div id="leaderboard-content">
+                    <div class="text-center" style="padding: 2rem;">
+                        <p>Loading leaderboard...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Quick Actions</h3>
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <a href="/skills" class="btn">Browse Available Skills</a>
+                    <a href="/add-skill" class="btn btn-secondary">Teach a New Skill</a>
+                    <button onclick="viewProfile()" class="btn" style="background-color: #67C090;">View Profile</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Modal -->
+        <div id="profileModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Your Profile</h3>
+                    <button class="close" onclick="closeProfile()" type="button">&times;</button>
+                </div>
+                <div id="profileContent">
+                    <!-- Content will be loaded when modal is opened -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Account Confirmation Modal -->
+        <div id="deleteAccountModal" class="modal hidden">
+            <div class="modal-content" style="max-width: 450px;">
+                <div class="modal-header" style="background-color: #dc3545;">
+                    <h3>! Delete Account</h3>
+                    <button class="close" onclick="closeDeleteAccount()" type="button">&times;</button>
+                </div>
+                <div style="padding: 1.5rem;">
+                    <div id="deleteAccountAlert" class="hidden"></div>
+                    <div style="margin-bottom: 1.5rem;">
+                        <p><strong>Are you sure you want to delete your account?</strong></p>
+                        <p style="color: #666; font-size: 0.9rem; margin-top: 1rem;">This action cannot be undone. Your account and all associated data will be permanently deleted.</p>
+                        
+                        <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 1rem; margin: 1rem 0; font-size: 0.9rem;">
+                            <strong>! Important:</strong> If you have students enrolled in your skills, you cannot delete your account until they complete their enrollment.
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="deleteConfirmInput">Type "DELETE" to confirm:</label>
+                        <input type="text" id="deleteConfirmInput" placeholder="Type DELETE here" style="text-transform: uppercase;">
+                    </div>
+                    
+                    <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                        <button onclick="confirmDeleteAccount()" class="btn" style="flex: 1; background-color: #dc3545; border-color: #dc3545;">Delete My Account</button>
+                        <button onclick="closeDeleteAccount()" class="btn btn-secondary" style="flex: 1;">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Meeting Link Modal -->
+        <div id="editMeetingModal" class="modal hidden">
+            <div class="modal-content" style="max-width: 500px;">
+                <div class="modal-header">
+                    <h3>Edit Meeting Link</h3>
+                    <button class="close" onclick="closeEditMeeting()" type="button">&times;</button>
+                </div>
+                <div style="padding: 1.5rem;">
+                    <div id="editMeetingAlert" class="hidden"></div>
+                    <div class="form-group">
+                        <label for="skillNameDisplay">Skill:</label>
+                        <input type="text" id="skillNameDisplay" readonly style="background: #f5f5f5;">
+                    </div>
+                    <div class="form-group">
+                        <label for="meetingLinkInput">Google Meet Link:</label>
+                        <input type="url" id="meetingLinkInput" placeholder="https://meet.google.com/xxx-xxxx-xxx">
+                        <small style="color: #666; font-size: 0.9rem;">
+                            Provide a Google Meet link for your online sessions
+                        </small>
+                    </div>
+                    <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                        <button onclick="saveMeetingLink()" class="btn" style="flex: 1;">Save Link</button>
+                        <button onclick="closeEditMeeting()" class="btn btn-secondary" style="flex: 1;">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <style>
+        .modal {
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 0;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 10px 10px 0 0;
+        }
+        
+        .close {
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            opacity: 0.7;
+        }
+        
+        #profileContent {
+            padding: 1.5rem;
+        }
+        
+        .profile-section {
+            margin-bottom: 2rem;
+        }
+        
+        .skill-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .skill-list li {
+            background-color: #DDF4E7;
+            padding: 0.5rem;
+            margin: 0.5rem 0;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+
+    <script>
+        let currentUser = null;
+
+        // Check authentication
+        const token = localStorage.getItem('token');
+        const user = localStorage.getItem('user');
+
+        if (!token || !user) {
+            window.location.href = '/login';
+        } else {
+            currentUser = JSON.parse(user);
+            document.getElementById('username').textContent = currentUser.username;
+            // Initialize with stored credits while loading fresh data
+            document.getElementById('userCredits').textContent = currentUser.credits || 0;
+            document.getElementById('skillsTaught').textContent = '0';
+            document.getElementById('skillsLearning').textContent = '0';
+        }
+
+        async function fetchWithAuth(url, options = {}) {
+            const token = localStorage.getItem('token');
+            return fetch(url, {
+                ...options,
+                headers: {
+                    ...options.headers,
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+        }
+
+        async function loadDashboard() {
+            try {
+                console.log('Loading dashboard...');
+                
+                // Show loading state
+                document.getElementById('userCredits').textContent = 'Loading...';
+                document.getElementById('skillsTaught').textContent = 'Loading...';
+                document.getElementById('skillsLearning').textContent = 'Loading...';
+                
+                // Load user profile first to get current credits
+                const profileResponse = await fetchWithAuth('/api/user/profile');
+                if (profileResponse.ok) {
+                    const profile = await profileResponse.json();
+                    console.log('Profile data:', profile);
+                    
+                    // Update UI immediately with fresh data
+                    document.getElementById('userCredits').textContent = profile.credits || 0;
+                    document.getElementById('skillsTaught').textContent = (profile.skills_taught && profile.skills_taught.length) || 0;
+                    document.getElementById('skillsLearning').textContent = (profile.enrolled_skills && profile.enrolled_skills.length) || 0;
+                    
+                    // Update localStorage and currentUser with fresh data
+                    const updatedUser = {
+                        id: currentUser.id,
+                        username: profile.username,
+                        role: currentUser.role,
+                        credits: profile.credits,
+                        skills_taught: profile.skills_taught || [],
+                        enrolled_skills: profile.enrolled_skills || []
+                    };
+                    localStorage.setItem('user', JSON.stringify(updatedUser));
+                    currentUser = updatedUser;
+                } else {
+                    console.error('Failed to load profile:', profileResponse.status, await profileResponse.text());
+                    // Reset to default values if API fails
+                    document.getElementById('userCredits').textContent = currentUser.credits || 0;
+                    document.getElementById('skillsTaught').textContent = 0;
+                    document.getElementById('skillsLearning').textContent = 0;
+                    
+                    if (profileResponse.status === 401) {
+                        logout();
+                        return;
+                    }
+                }
+
+                // Load leaderboard after user data is updated
+                const leaderboardResponse = await fetch('/api/leaderboard');
+                if (leaderboardResponse.ok) {
+                    const leaderboard = await leaderboardResponse.json();
+                    
+                    const leaderboardContent = document.getElementById('leaderboard-content');
+                    if (leaderboard.length === 0) {
+                        leaderboardContent.innerHTML = '<div class="text-center" style="padding: 2rem;"><p>No users yet. Be the first to teach!</p></div>';
+                    } else {
+                        leaderboardContent.innerHTML = leaderboard.map(user => `
+                            <div class="leaderboard-item">
+                                <div>
+                                    <span class="rank ${user.rank <= 3 ? 'top-3' : ''}">${user.rank}</span>
+                                    <span style="margin-left: 1rem;">${user.username}</span>
+                                </div>
+                                <div class="stat-value" style="font-size: 1rem;">${user.credits} credits</div>
+                            </div>
+                        `).join('');
+                    }
+                } else {
+                    console.error('Failed to load leaderboard:', leaderboardResponse.status);
+                }
+
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                // If there's a network error, show stored values or 0
+                document.getElementById('userCredits').textContent = currentUser.credits || 0;
+                document.getElementById('skillsTaught').textContent = 0;
+                document.getElementById('skillsLearning').textContent = 0;
+            }
+        }
+
+        async function viewProfile() {
+            const modal = document.getElementById('profileModal');
+            const content = document.getElementById('profileContent');
+            
+            // Show modal
+            modal.classList.remove('hidden');
+            
+            // Reset content to loading state
+            content.innerHTML = '<div class="text-center" style="padding: 2rem;"><p>Loading profile...</p></div>';
+            
+            try {
+                const response = await fetchWithAuth('/api/user/profile');
+                
+                if (response.ok) {
+                    const profile = await response.json();
+                    
+                    // Update currentUser with latest profile data
+                    currentUser.skills_taught = profile.skills_taught;
+                    currentUser.enrolled_skills = profile.enrolled_skills;
+                    currentUser.credits = profile.credits;
+                    localStorage.setItem('user', JSON.stringify(currentUser));
+                    
+                    content.innerHTML = `
+                        <div class="profile-section">
+                            <h4>Basic Information</h4>
+                            <p><strong>Username:</strong> ${profile.username}</p>
+                            <p><strong>Email:</strong> ${profile.email}</p>
+                            <p><strong>Credits:</strong> ${profile.credits}</p>
+                        </div>
+                        
+                        <div class="profile-section">
+                            <h4>Skills You Teach (${profile.skills_taught.length})</h4>
+                            ${profile.skills_taught.length === 0 ? 
+                                '<p>You haven\'t added any skills to teach yet.</p>' :
+                                '<ul class="skill-list">' + 
+                                profile.skills_taught.map((skill, index) => `
+                                    <li>
+                                        <div class="skill-info">
+                                            <span class="skill-title">${skill.title} (${skill.category})</span>
+                                            <div class="skill-meta">
+                                                <span class="skill-credits">${skill.credits} credits</span>
+                                                ${skill.class_timing ? `<div class="skill-timing">⏰ ${skill.class_timing}</div>` : ''}
+                                                <div class="skill-actions">
+                                                    ${skill.meeting_link ? 
+                                                        `<span class="meeting-status">✓ Meeting link added</span>` : 
+                                                        `<span class="meeting-status no-link">⚠ No meeting link</span>`
+                                                    }
+                                                    <button onclick="editSkillMeeting(${index}, '${skill.title}', '${skill.meeting_link || ''}')" class="edit-btn">
+                                                        ⌘ Edit Meeting Link
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                `).join('') + 
+                                '</ul>'
+                            }
+                        </div>
+                        
+                        <div class="profile-section">
+                            <h4>Skills You're Learning (${profile.enrolled_skills.length})</h4>
+                            ${profile.enrolled_skills.length === 0 ? 
+                                '<p>You haven\'t enrolled in any skills yet.</p>' :
+                                '<ul class="skill-list">' + 
+                                profile.enrolled_skills.map(skill => `
+                                    <li>
+                                        <div>
+                                            <span class="skill-title">${skill.title} (${skill.category})</span>
+                                            <div class="skill-meta">
+                                                <span class="skill-credits">${skill.credits} credits</span>
+                                                ${skill.class_timing ? `<div class="skill-timing">⏰ ${skill.class_timing}</div>` : ''}
+                                                ${skill.meeting_link ? 
+                                                    `<a href="${skill.meeting_link}" target="_blank" class="meeting-link">
+                                                        ◉ Join Class
+                                                    </a>` : 
+                                                    '<span class="no-link">No meeting link provided</span>'
+                                                }
+                                            </div>
+                                        </div>
+                                    </li>
+                                `).join('') + 
+                                '</ul>'
+                            }
+                        </div>
+                        
+                        <div class="profile-section" style="border-top: 1px solid #eee; padding-top: 1.5rem; margin-top: 2rem;">
+                            <h4 style="color: #dc3545;">⚠ Danger Zone</h4>
+                            <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">Once you delete your account, there is no going back. Please be certain.</p>
+                            <button onclick="showDeleteAccount()" class="btn" style="background-color: #dc3545; border-color: #dc3545; color: white;">
+                                ■ Delete Account
+                            </button>
+                        </div>
+                    `;
+                } else if (response.status === 401) {
+                    content.innerHTML = '<div class="text-center" style="padding: 2rem;"><p>Session expired. Please log in again.</p></div>';
+                    setTimeout(() => {
+                        closeProfile();
+                        logout();
+                    }, 2000);
+                } else {
+                    content.innerHTML = '<div class="text-center" style="padding: 2rem;"><p>Unable to load profile. Please try again.</p></div>';
+                }
+            } catch (error) {
+                console.error('Profile loading error:', error);
+                content.innerHTML = '<div class="text-center" style="padding: 2rem;"><p>Network error. Please check your connection and try again.</p></div>';
+            }
+        }
+
+        // Close modal when clicking outside of it
+        document.getElementById('profileModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeProfile();
+            }
+        });
+
+        document.getElementById('editMeetingModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEditMeeting();
+            }
+        });
+
+        document.getElementById('deleteAccountModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeDeleteAccount();
+            }
+        });
+
+        function closeProfile() {
+            document.getElementById('profileModal').classList.add('hidden');
+        }
+
+        let currentEditingSkill = null;
+
+        function editSkillMeeting(skillIndex, skillTitle, currentLink) {
+            currentEditingSkill = {
+                index: skillIndex,
+                title: skillTitle,
+                currentLink: currentLink
+            };
+            
+            document.getElementById('skillNameDisplay').value = skillTitle;
+            document.getElementById('meetingLinkInput').value = currentLink || '';
+            document.getElementById('editMeetingAlert').classList.add('hidden');
+            document.getElementById('editMeetingModal').classList.remove('hidden');
+        }
+
+        function closeEditMeeting() {
+            document.getElementById('editMeetingModal').classList.add('hidden');
+            currentEditingSkill = null;
+        }
+
+        function showDeleteAccount() {
+            document.getElementById('deleteAccountModal').classList.remove('hidden');
+            document.getElementById('deleteConfirmInput').value = '';
+            document.getElementById('deleteAccountAlert').classList.add('hidden');
+        }
+
+        function closeDeleteAccount() {
+            document.getElementById('deleteAccountModal').classList.add('hidden');
+        }
+
+        async function confirmDeleteAccount() {
+            const confirmInput = document.getElementById('deleteConfirmInput').value.trim().toUpperCase();
+            const alertDiv = document.getElementById('deleteAccountAlert');
+            
+            if (confirmInput !== 'DELETE') {
+                alertDiv.className = 'alert alert-error';
+                alertDiv.textContent = 'Please type "DELETE" to confirm account deletion.';
+                alertDiv.classList.remove('hidden');
+                return;
+            }
+            
+            try {
+                alertDiv.className = 'alert alert-info';
+                alertDiv.textContent = 'Deleting account...';
+                alertDiv.classList.remove('hidden');
+                
+                const response = await fetchWithAuth('/api/user/delete', {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alertDiv.className = 'alert alert-success';
+                    alertDiv.textContent = 'Account deleted successfully. Redirecting...';
+                    
+                    // Clear local storage and redirect after a brief delay
+                    setTimeout(() => {
+                        localStorage.removeItem('token');
+                        localStorage.removeItem('user');
+                        window.location.href = '/login';
+                    }, 2000);
+                } else {
+                    alertDiv.className = 'alert alert-error';
+                    alertDiv.textContent = data.message || 'Failed to delete account. Please try again.';
+                }
+            } catch (error) {
+                console.error('Error deleting account:', error);
+                alertDiv.className = 'alert alert-error';
+                alertDiv.textContent = 'Network error. Please check your connection and try again.';
+            }
+        }
+
+        async function saveMeetingLink() {
+            if (!currentEditingSkill) return;
+            
+            const meetingLink = document.getElementById('meetingLinkInput').value.trim();
+            const alertDiv = document.getElementById('editMeetingAlert');
+            
+            // Basic URL validation
+            if (meetingLink && !meetingLink.match(/^https?:\/\/.+/)) {
+                alertDiv.className = 'alert alert-error';
+                alertDiv.textContent = 'Please enter a valid URL starting with http:// or https://';
+                alertDiv.classList.remove('hidden');
+                return;
+            }
+            
+            try {
+                // Get the skill ID from the current user's skills
+                const profile = await (await fetchWithAuth('/api/user/profile')).json();
+                const skill = profile.skills_taught[currentEditingSkill.index];
+                
+                if (!skill) {
+                    alertDiv.className = 'alert alert-error';
+                    alertDiv.textContent = 'Skill not found. Please refresh and try again.';
+                    alertDiv.classList.remove('hidden');
+                    return;
+                }
+                
+                // Find skill ID by matching title and other properties
+                const allSkillsResponse = await fetch('/api/skills');
+                const allSkills = await allSkillsResponse.json();
+                const targetSkill = allSkills.find(s => s.title === skill.title && s.teacher_name === currentUser.username);
+                
+                if (!targetSkill) {
+                    alertDiv.className = 'alert alert-error';
+                    alertDiv.textContent = 'Could not find skill to update.';
+                    alertDiv.classList.remove('hidden');
+                    return;
+                }
+                
+                const response = await fetchWithAuth(`/api/skills/${targetSkill.id}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ meeting_link: meetingLink })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alertDiv.className = 'alert alert-success';
+                    alertDiv.textContent = 'Meeting link updated successfully!';
+                    alertDiv.classList.remove('hidden');
+                    
+                    // Update the current user's skills in localStorage
+                    skill.meeting_link = meetingLink;
+                    localStorage.setItem('user', JSON.stringify(currentUser));
+                    
+                    setTimeout(() => {
+                        closeEditMeeting();
+                        // Refresh profile view if it's open
+                        if (!document.getElementById('profileModal').classList.contains('hidden')) {
+                            viewProfile();
+                        }
+                    }, 1500);
+                } else {
+                    alertDiv.className = 'alert alert-error';
+                    alertDiv.textContent = data.message || 'Failed to update meeting link';
+                    alertDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Error updating meeting link:', error);
+                alertDiv.className = 'alert alert-error';
+                alertDiv.textContent = 'Network error. Please try again.';
+                alertDiv.classList.remove('hidden');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/';
+        }
+
+        // Load dashboard data when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboard();
+        });
+    </script>
+</body>
+</html>

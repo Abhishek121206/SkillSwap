@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - SkillSwap</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="header">
+        <nav class="nav">
+            <div class="logo">
+                <a href="/" class="logo-link">
+                    <span class="logo-icon">🎓</span>
+                    <span class="logo-text">SkillSwap</span>
+                </a>
+            </div>
+            <ul class="nav-links">
+                <li><a href="/"><span class="nav-icon">⌘</span>Home</a></li>
+                <li><a href="/skills"><span class="nav-icon">◉</span>Browse Skills</a></li>
+                <li><a href="/register"><span class="nav-icon">◈</span>Register</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="form-container">
+            <h2 class="text-center mb-2">Login to SkillSwap</h2>
+            
+            <div id="loginAlert" class="hidden"></div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Username:</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                
+                <button type="submit" class="btn" style="width: 100%;">Login</button>
+            </form>
+            
+            <div class="text-center mt-1">
+                <p>Don't have an account? <a href="/register" style="color: #26667F;">Register here</a></p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const alertDiv = document.getElementById('loginAlert');
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password }),
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    
+                    alertDiv.className = 'alert alert-success';
+                    alertDiv.textContent = 'Login successful! Redirecting...';
+                    alertDiv.classList.remove('hidden');
+                    
+                    // Small delay to ensure data is saved
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 500);
+                } else {
+                    alertDiv.className = 'alert alert-error';
+                    alertDiv.textContent = data.message;
+                    alertDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                alertDiv.className = 'alert alert-error';
+                alertDiv.textContent = 'Login failed. Please try again.';
+                alertDiv.classList.remove('hidden');
+            }
+        });
+        
+        // Check if user is already logged in
+        if (localStorage.getItem('token')) {
+            window.location.href = '/dashboard';
+        }
+    </script>
+</body>
+</html>

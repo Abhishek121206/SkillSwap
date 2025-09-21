@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browse Skills - SkillSwap</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="header">
+        <nav class="nav">
+            <div class="logo">
+                <a href="/" class="logo-link" id="logoLink">
+                    <span class="logo-icon">🎓</span>
+                    <span class="logo-text">SkillSwap</span>
+                </a>
+            </div>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="/"><span class="nav-icon">⌘</span>Home</a></li>
+                <li><a href="/skills"><span class="nav-icon">◉</span>Browse Skills</a></li>
+                <li><a href="/login"><span class="nav-icon">▶</span>Login</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="dashboard-header">
+            <h1>Available Skills</h1>
+            <p>Discover new skills to learn from our community</p>
+        </div>
+
+        <!-- Search and Filter Section -->
+        <div class="card mb-2">
+            <div class="grid grid-2">
+                <div class="form-group">
+                    <label for="searchSkills">Search Skills:</label>
+                    <input type="text" id="searchSkills" placeholder="Search by title or description...">
+                </div>
+                <div class="form-group">
+                    <label for="filterCategory">Filter by Category:</label>
+                    <select id="filterCategory">
+                        <option value="">All Categories</option>
+                        <option value="Programming">Programming</option>
+                        <option value="Design">Design</option>
+                        <option value="Language">Language</option>
+                        <option value="Music">Music</option>
+                        <option value="Sports">Sports</option>
+                        <option value="Cooking">Cooking</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Skills Grid -->
+        <div id="skillsGrid" class="grid">
+            <div class="text-center" style="grid-column: 1 / -1;">
+                <p>Loading skills...</p>
+            </div>
+        </div>
+
+        <!-- Enrollment Modal -->
+        <div id="enrollModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Enroll in Skill</h3>
+                    <button class="close" onclick="closeEnrollModal()" type="button">&times;</button>
+                </div>
+                <div id="enrollContent">
+                    <p>Loading skill details...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <style>
+        .modal {
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 0;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            background-color: #26667F;
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 10px 10px 0 0;
+        }
+        
+        .close {
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            opacity: 0.7;
+        }
+        
+        #enrollContent {
+            padding: 1.5rem;
+        }
+    </style>
+
+    <script>
+        let allSkills = [];
+        let currentUser = null;
+
+        // Check if user is logged in
+        const token = localStorage.getItem('token');
+        const user = localStorage.getItem('user');
+
+        if (token && user) {
+            currentUser = JSON.parse(user);
+            // Update navigation for logged-in users
+            document.getElementById('navLinks').innerHTML = `
+                <li><a href="/dashboard"><span class="nav-icon">⌘</span>Dashboard</a></li>
+                <li><a href="/skills"><span class="nav-icon">◉</span>Browse Skills</a></li>
+                <li><a href="/add-skill"><span class="nav-icon">⊕</span>Add Skill</a></li>
+                <li><a href="#" onclick="logout()"><span class="nav-icon">⟲</span>Logout</a></li>
+            `;
+            // Update logo link for logged-in users
+            document.getElementById('logoLink').href = '/dashboard';
+        }
+
+        async function fetchWithAuth(url, options = {}) {
+            const token = localStorage.getItem('token');
+            return fetch(url, {
+                ...options,
+                headers: {
+                    ...options.headers,
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+        }
+
+        async function loadSkills() {
+            try {
+                const response = await fetch('/api/skills');
+                allSkills = await response.json();
+                displaySkills(allSkills);
+            } catch (error) {
+                console.error('Error loading skills:', error);
+                document.getElementById('skillsGrid').innerHTML = 
+                    '<div class="text-center" style="grid-column: 1 / -1;"><p>Error loading skills. Please try again.</p></div>';
+            }
+        }
+
+        function displaySkills(skills) {
+            const skillsGrid = document.getElementById('skillsGrid');
+            
+            if (skills.length === 0) {
+                skillsGrid.innerHTML = 
+                    '<div class="text-center" style="grid-column: 1 / -1;"><p>No skills found. Be the first to add one!</p></div>';
+                return;
+            }
+
+            skillsGrid.innerHTML = skills.map(skill => `
+                <div class="skill-card">
+                    <div class="skill-category">${skill.category}</div>
+                    <div class="skill-difficulty">${skill.difficulty}</div>
+                    <h3>${skill.title}</h3>
+                    <p>${skill.description}</p>
+                    <p><strong>Teacher:</strong> ${skill.teacher_name}</p>
+                    ${skill.class_timing ? `<p><strong>Schedule:</strong> ${skill.class_timing}</p>` : ''}
+                    <div class="skill-credits">${skill.credits_required} credits required</div>
+                    <div class="mt-1">
+                        ${currentUser ? 
+                            (skill.teacher_name === currentUser.username ? 
+                                '<button class="btn" style="background-color: #67C090; cursor: default;" disabled>Your Skill</button>' :
+                                `<button onclick="showEnrollModal(${skill.id})" class="btn">Enroll Now</button>`
+                            ) :
+                            `<a href="/login" class="btn">Login to Enroll</a>`
+                        }
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterSkills() {
+            const searchTerm = document.getElementById('searchSkills').value.toLowerCase();
+            const categoryFilter = document.getElementById('filterCategory').value;
+
+            const filtered = allSkills.filter(skill => {
+                const matchesSearch = skill.title.toLowerCase().includes(searchTerm) || 
+                                    skill.description.toLowerCase().includes(searchTerm);
+                const matchesCategory = !categoryFilter || skill.category === categoryFilter;
+                
+                return matchesSearch && matchesCategory;
+            });
+
+            displaySkills(filtered);
+        }
+
+        async function showEnrollModal(skillId) {
+            const skill = allSkills.find(s => s.id === skillId);
+            if (!skill) return;
+
+            document.getElementById('enrollModal').classList.remove('hidden');
+            
+            document.getElementById('enrollContent').innerHTML = `
+                <div class="mb-2">
+                    <h4>${skill.title}</h4>
+                    <p><strong>Teacher:</strong> ${skill.teacher_name}</p>
+                    <p><strong>Category:</strong> ${skill.category}</p>
+                    <p><strong>Difficulty:</strong> ${skill.difficulty}</p>
+                    <p><strong>Description:</strong> ${skill.description}</p>
+                    ${skill.class_timing ? `<p><strong>Class Schedule:</strong> ${skill.class_timing}</p>` : ''}
+                    ${skill.meeting_link ? `<p><strong>Meeting Link:</strong> <a href="${skill.meeting_link}" target="_blank" style="color: #26667F; text-decoration: underline;">${skill.meeting_link}</a></p>` : ''}
+                    <p><strong>Credits Required:</strong> ${skill.credits_required}</p>
+                </div>
+                
+                <div class="mb-2">
+                    <p><strong>Your Current Credits:</strong> ${currentUser ? currentUser.credits || 'Loading...' : 0}</p>
+                </div>
+                
+                <div id="enrollAlert" class="hidden"></div>
+                
+                <div class="flex gap-1">
+                    <button onclick="enrollInSkill(${skillId})" class="btn">
+                        Confirm Enrollment
+                    </button>
+                    <button onclick="closeEnrollModal()" class="btn btn-secondary">
+                        Cancel
+                    </button>
+                </div>
+            `;
+
+            // Update user credits display
+            if (currentUser) {
+                try {
+                    const response = await fetchWithAuth('/api/user/profile');
+                    if (response.ok) {
+                        const profile = await response.json();
+                        currentUser.credits = profile.credits;
+                        document.querySelector('#enrollContent p:nth-child(6)').innerHTML = 
+                            `<strong>Your Current Credits:</strong> ${profile.credits}`;
+                    }
+                } catch (error) {
+                    console.error('Error loading user credits:', error);
+                }
+            }
+        }
+
+        async function enrollInSkill(skillId) {
+            const alertDiv = document.getElementById('enrollAlert');
+            
+            try {
+                const response = await fetchWithAuth('/api/enroll', {
+                    method: 'POST',
+                    body: JSON.stringify({ skill_id: skillId })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alertDiv.className = 'alert alert-success';
+                    alertDiv.textContent = 'Successfully enrolled! You can now start learning this skill.';
+                    alertDiv.classList.remove('hidden');
+                    
+                    // Update user credits in localStorage by fetching fresh data
+                    try {
+                        const profileResponse = await fetchWithAuth('/api/user/profile');
+                        if (profileResponse.ok) {
+                            const profile = await profileResponse.json();
+                            const updatedUser = {
+                                ...currentUser,
+                                credits: profile.credits
+                            };
+                            localStorage.setItem('user', JSON.stringify(updatedUser));
+                            currentUser = updatedUser;
+                        }
+                    } catch (error) {
+                        console.error('Error updating user data:', error);
+                    }
+                    
+                    setTimeout(() => {
+                        closeEnrollModal();
+                    }, 2000);
+                } else {
+                    alertDiv.className = 'alert alert-error';
+                    alertDiv.textContent = data.message;
+                    alertDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                alertDiv.className = 'alert alert-error';
+                alertDiv.textContent = 'Enrollment failed. Please try again.';
+                alertDiv.classList.remove('hidden');
+            }
+        }
+
+        // Close modal when clicking outside of it
+        document.getElementById('enrollModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEnrollModal();
+            }
+        });
+
+        function closeEnrollModal() {
+            document.getElementById('enrollModal').classList.add('hidden');
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/';
+        }
+
+        // Event listeners
+        document.getElementById('searchSkills').addEventListener('input', filterSkills);
+        document.getElementById('filterCategory').addEventListener('change', filterSkills);
+
+        // Load skills when page loads
+        loadSkills();
+    </script>
+</body>
+</html>

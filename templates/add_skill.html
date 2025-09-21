@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Skill - SkillSwap</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="header">
+        <nav class="nav">
+            <div class="logo">
+                <a href="/dashboard" class="logo-link">
+                    <span class="logo-icon">🎓</span>
+                    <span class="logo-text">SkillSwap</span>
+                </a>
+            </div>
+            <ul class="nav-links">
+                <li><a href="/dashboard"><span class="nav-icon">⌘</span>Dashboard</a></li>
+                <li><a href="/skills"><span class="nav-icon">◉</span>Browse Skills</a></li>
+                <li><a href="/add-skill"><span class="nav-icon">⊕</span>Add Skill</a></li>
+                <li><a href="#" onclick="logout()"><span class="nav-icon">⟲</span>Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="dashboard-header">
+            <h1>Share Your Knowledge</h1>
+            <p>Add a new skill to teach and earn credits from learners</p>
+        </div>
+
+        <div class="form-container" style="max-width: 600px;">
+            <h2 class="text-center mb-2">Add New Skill</h2>
+            
+            <div id="addSkillAlert" class="hidden"></div>
+            
+            <form id="addSkillForm">
+                <div class="form-group">
+                    <label for="title">Skill Title:</label>
+                    <input type="text" id="title" name="title" required 
+                           placeholder="e.g., Python Programming Basics">
+                </div>
+                
+                <div class="form-group">
+                    <label for="category">Category:</label>
+                    <select id="category" name="category" required>
+                        <option value="">Select a category</option>
+                        <option value="Programming">Programming</option>
+                        <option value="Design">Design</option>
+                        <option value="Language">Language</option>
+                        <option value="Music">Music</option>
+                        <option value="Sports">Sports</option>
+                        <option value="Cooking">Cooking</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="difficulty">Difficulty Level:</label>
+                    <select id="difficulty" name="difficulty" required>
+                        <option value="">Select difficulty</option>
+                        <option value="Beginner">Beginner</option>
+                        <option value="Intermediate">Intermediate</option>
+                        <option value="Advanced">Advanced</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">Description:</label>
+                    <textarea id="description" name="description" rows="4" required
+                              placeholder="Describe what you'll teach, prerequisites, and what learners will gain..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="credits_required">Credits Required:</label>
+                    <select id="credits_required" name="credits_required" required>
+                        <option value="">Select credits</option>
+                        <option value="2">2 credits (30 minutes)</option>
+                        <option value="4">4 credits (1 hour)</option>
+                        <option value="6">6 credits (1.5 hours)</option>
+                        <option value="8">8 credits (2 hours)</option>
+                        <option value="10">10 credits (2.5 hours)</option>
+                    </select>
+                    <small style="color: #666; font-size: 0.9rem;">
+                        Note: You'll earn these credits when someone enrolls in your skill
+                    </small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="meeting_link">Google Meet Link (Optional):</label>
+                    <input type="url" id="meeting_link" name="meeting_link" 
+                           placeholder="https://meet.google.com/xxx-xxxx-xxx">
+                    <small style="color: #666; font-size: 0.9rem;">
+                        Provide a Google Meet link for your online sessions
+                    </small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="class_timing">Class Schedule (Optional):</label>
+                    <textarea id="class_timing" name="class_timing" rows="3" 
+                              placeholder="e.g., Mondays & Wednesdays 7:00 PM - 8:30 PM (EST)&#10;Available weekends for flexible scheduling&#10;Please contact me to arrange specific times"></textarea>
+                    <small style="color: #666; font-size: 0.9rem;">
+                        Share your preferred schedule or availability for learners
+                    </small>
+                </div>
+                
+                <button type="submit" class="btn" style="width: 100%;">Add Skill</button>
+            </form>
+            
+            <div class="text-center mt-1">
+                <p><a href="/skills" style="color: #26667F;">Browse existing skills</a> | 
+                   <a href="/dashboard" style="color: #26667F;">Back to Dashboard</a></p>
+            </div>
+        </div>
+
+        <!-- Success Modal -->
+        <div id="successModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>⊕ Skill Added Successfully!</h3>
+                </div>
+                <div style="padding: 1.5rem; text-align: center;">
+                    <p>Your skill has been added to SkillSwap! Other users can now enroll and you'll start earning credits.</p>
+                    <div class="mt-2">
+                        <button onclick="goToDashboard()" class="btn">Go to Dashboard</button>
+                        <button onclick="addAnotherSkill()" class="btn btn-secondary">Add Another Skill</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <style>
+        .modal {
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+        }
+        
+        .modal-header {
+            background-color: #26667F;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            border-radius: 10px 10px 0 0;
+        }
+    </style>
+
+    <script>
+        // Check authentication
+        const token = localStorage.getItem('token');
+        const user = localStorage.getItem('user');
+
+        if (!token || !user) {
+            window.location.href = '/login';
+        }
+
+        async function fetchWithAuth(url, options = {}) {
+            const token = localStorage.getItem('token');
+            return fetch(url, {
+                ...options,
+                headers: {
+                    ...options.headers,
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+        }
+
+        document.getElementById('addSkillForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                title: document.getElementById('title').value,
+                category: document.getElementById('category').value,
+                difficulty: document.getElementById('difficulty').value,
+                description: document.getElementById('description').value,
+                credits_required: parseInt(document.getElementById('credits_required').value),
+                meeting_link: document.getElementById('meeting_link').value,
+                class_timing: document.getElementById('class_timing').value
+            };
+            
+            const alertDiv = document.getElementById('addSkillAlert');
+            
+            try {
+                const response = await fetchWithAuth('/api/skills', {
+                    method: 'POST',
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Show success modal instead of alert
+                    document.getElementById('successModal').classList.remove('hidden');
+                } else {
+                    alertDiv.className = 'alert alert-error';
+                    alertDiv.textContent = data.message;
+                    alertDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                alertDiv.className = 'alert alert-error';
+                alertDiv.textContent = 'Failed to add skill. Please try again.';
+                alertDiv.classList.remove('hidden');
+            }
+        });
+
+        function goToDashboard() {
+            window.location.href = '/dashboard';
+        }
+
+        function addAnotherSkill() {
+            document.getElementById('successModal').classList.add('hidden');
+            document.getElementById('addSkillForm').reset();
+            document.getElementById('addSkillAlert').classList.add('hidden');
+            window.scrollTo(0, 0);
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/';
+        }
+    </script>
+</body>
+</html>

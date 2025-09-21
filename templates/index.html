@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillSwap - Peer-to-Peer Skill Sharing</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="header">
+        <nav class="nav">
+            <div class="logo">
+                <a href="/" class="logo-link">
+                    <span class="logo-icon">🎓</span>
+                    <span class="logo-text">SkillSwap</span>
+                </a>
+            </div>
+            <ul class="nav-links">
+                <li><a href="/"><span class="nav-icon">⌘</span>Home</a></li>
+                <li><a href="/skills"><span class="nav-icon">◉</span>Browse Skills</a></li>
+                <li><a href="/login"><span class="nav-icon">▶</span>Login</a></li>
+                <li><a href="/register"><span class="nav-icon">◈</span>Register</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="dashboard-header">
+            <h1>Welcome to SkillSwap</h1>
+            <p>Learn new skills, teach others, and earn credits in our peer-to-peer learning community!</p>
+        </div>
+
+        <div class="grid grid-2">
+            <div class="card">
+                <h3>■ Learn Skills</h3>
+                <p>Browse hundreds of skills taught by your peers. Use your credits to enroll in classes and expand your knowledge.</p>
+                <a href="/skills" class="btn">Browse Skills</a>
+            </div>
+
+            <div class="card">
+                <h3>📚 Teach Skills</h3>
+                <p>Share your expertise and earn credits! Create skill listings and help others learn while building your reputation.</p>
+                <a href="/login" class="btn">Start Teaching</a>
+            </div>
+
+            <div class="card">
+                <h3>■ Leaderboard</h3>
+                <p>See top contributors in our community. Earn credits by teaching and climb the leaderboard!</p>
+                <div id="mini-leaderboard">
+                    <p>Login to see the leaderboard</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>💰 Credit System</h3>
+                <p>Our time-based credit system rewards teaching. For every 30 minutes you teach, earn credits to learn from others!</p>
+                <ul style="margin-top: 1rem; padding-left: 1rem;">
+                    <li>New users get 10 free credits</li>
+                    <li>Teach to earn more credits</li>
+                    <li>Use credits to learn new skills</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="text-center mt-2">
+            <h2>Ready to start your skill-sharing journey?</h2>
+            <div class="flex-center gap-1 mt-1">
+                <a href="/register" class="btn">Join SkillSwap</a>
+                <a href="/login" class="btn btn-secondary">Login</a>
+            </div>
+        </div>
+    </main>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
